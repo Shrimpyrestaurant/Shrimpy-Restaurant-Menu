@@ -894,11 +894,12 @@
             chatBox.scrollTop = chatBox.scrollHeight;
 
             try {
-                const systemPrompt = `أنت المساعد الذكي لمطعم "شرمبي" (Shrimpy) في مصر. ردودك قصيرة، مرحة، باللهجة المصرية. استخدم الإيموجي المناسبة ✨🦐🦑.`;
-
+                // الهيكلة الجديدة المضمونة
                 const payload = {
-                    systemInstruction: { parts: [{ text: systemPrompt }] },
-                    contents: [{ parts: [{ text: userText }] }]
+                    contents: [{
+                        role: "user",
+                        parts: [{ text: "أنت المساعد الذكي لمطعم شرمبي. ردودك قصيرة ومرحة باللهجة المصرية. استخدم الإيموجي. السؤال هو: " + userText }]
+                    }]
                 };
 
                 const response = await fetch(CLOUDFLARE_WORKER_URL, {
@@ -907,11 +908,14 @@
                     body: JSON.stringify(payload)
                 });
 
-                if (!response.ok) throw new Error("API Request Failed");
                 const data = await response.json();
-                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "عذراً، فيه مشكلة.";
-                
                 document.getElementById(loadingId).remove();
+
+                if (data.error) {
+                    throw new Error(data.error.message || "خطأ غير معروف من جوجل");
+                }
+
+                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "عذراً، لم أستطع فهم الطلب.";
                 let formattedText = aiText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
                 
                 chatBox.innerHTML += `
@@ -920,8 +924,10 @@
                         <div class="ai-msg">${formattedText}</div>
                     </div>`;
             } catch (err) {
-                // نظام الطوارئ: الرد المبرمج محلياً في حالة فشل الاتصال بالـ Worker
-                document.getElementById(loadingId).remove();
+                const loader = document.getElementById(loadingId);
+                if (loader) loader.remove();
+                
+                // Fallback محلي في حالة الخطأ عشان التطبيق ميبانش مكسور للزباين
                 let fallbackMsg = "المنيو بتاعنا مليان حاجات حلوة! لو بتحب الساندوتشات جرب ساندوتش الجمبري بـ 35 جنيه، ولو عايز وجبة متكاملة، وجبة الجمبري البانيه بـ 155 جنيه ممتازة. تحب تطلب إيه؟ ✨🦐";
                 
                 if (userText.includes("ارخص") || userText.includes("أرخص") || userText.includes("100")) {
@@ -935,7 +941,7 @@
                 chatBox.innerHTML += `
                     <div class="ai-msg-wrapper">
                         <div class="ai-avatar"><i class="fa-solid fa-robot"></i></div>
-                        <div class="ai-msg">${fallbackMsg}</div>
+                        <div class="ai-msg">${fallbackMsg} <br><br><small style="color:#EF4444; font-size:0.75rem; font-weight:normal;">(ملاحظة تقنية: ${err.message})</small></div>
                     </div>`;
             }
             chatBox.scrollTop = chatBox.scrollHeight;
