@@ -856,8 +856,8 @@
             });
         });
 
-        // ================= المساعد الذكي (الحل الجذري) =================
-        const CLOUDFLARE_WORKER_URL = "https://falling-pine-7d71.mustafazuhair888.workers.dev";
+        // ================= المساعد الذكي (تم الربط مع Vercel بنجاح) =================
+        const BACKEND_URL = "https://shrimpy-backend.vercel.app/chat";
 
         function openAIModal() {
             showModal('aiModal');
@@ -876,6 +876,7 @@
 
             const chatBox = document.getElementById('aiChatBox');
             
+            // 1. عرض رسالة العميل
             chatBox.innerHTML += `
                 <div class="user-msg-wrapper">
                     <div class="user-msg">${userText}</div>
@@ -883,6 +884,7 @@
             inputEl.value = '';
             chatBox.scrollTop = chatBox.scrollHeight;
 
+            // 2. عرض علامة التحميل (المساعد بيفكر)
             const loadingId = 'loading-' + Date.now();
             chatBox.innerHTML += `
                 <div class="ai-msg-wrapper" id="${loadingId}">
@@ -894,29 +896,22 @@
             chatBox.scrollTop = chatBox.scrollHeight;
 
             try {
-                // الهيكلة الجديدة المضمونة
-                const payload = {
-                    contents: [{
-                        role: "user",
-                        parts: [{ text: "أنت المساعد الذكي لمطعم شرمبي. ردودك قصيرة ومرحة باللهجة المصرية. استخدم الإيموجي. السؤال هو: " + userText }]
-                    }]
-                };
-
-                const response = await fetch(CLOUDFLARE_WORKER_URL, {
+                // 3. إرسال الطلب للسيرفر بتاعك على Vercel
+                const response = await fetch(BACKEND_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ message: userText }) // بيبعت السؤال بس لأن الشخصية متبرمجة في السيرفر
                 });
 
                 const data = await response.json();
-                document.getElementById(loadingId).remove();
+                document.getElementById(loadingId).remove(); // شيل علامة التحميل
 
-                if (data.error) {
-                    throw new Error(data.error.message || "خطأ غير معروف من جوجل");
+                if (!response.ok) {
+                    throw new Error(data.detail || "مشكلة في السيرفر");
                 }
 
-                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "عذراً، لم أستطع فهم الطلب.";
-                let formattedText = aiText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                // 4. تظبط شكل النص اللي راجع من الذكاء الاصطناعي
+                let formattedText = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
                 
                 chatBox.innerHTML += `
                     <div class="ai-msg-wrapper">
@@ -927,21 +922,11 @@
                 const loader = document.getElementById(loadingId);
                 if (loader) loader.remove();
                 
-                // Fallback محلي في حالة الخطأ عشان التطبيق ميبانش مكسور للزباين
-                let fallbackMsg = "المنيو بتاعنا مليان حاجات حلوة! لو بتحب الساندوتشات جرب ساندوتش الجمبري بـ 35 جنيه، ولو عايز وجبة متكاملة، وجبة الجمبري البانيه بـ 155 جنيه ممتازة. تحب تطلب إيه؟ ✨🦐";
-                
-                if (userText.includes("ارخص") || userText.includes("أرخص") || userText.includes("100")) {
-                    fallbackMsg = "بـ 100 جنيه تقدر تطلب اسباجتي جمبري بـ 80 جنيه، أو ريزو ميكس بـ 75 جنيه، وهيفضل معاك باقي كمان! 💸🦐";
-                } else if (userText.includes("احسن") || userText.includes("أحسن") || userText.includes("افضل")) {
-                    fallbackMsg = "أكتر حاجة بتنطلب عندنا هي وجبة الجمبري البانيه بـ 155 ج، وريزو الميكس بـ 75 ج. جربهم ومش هتندم! 🔥";
-                } else if (userText.includes("شخصين") || userText.includes("اتنين")) {
-                     fallbackMsg = "لشخصين أنصحك بـ 2 وجبة ميكس جمبري وكاليماري، أو ممكن ساندوتشات مع شوربة سي فود عشان تدفي! 👨‍🍳";
-                }
-
+                // رسالة في حالة إن السيرفر مشغول أو فيه مشكلة
                 chatBox.innerHTML += `
                     <div class="ai-msg-wrapper">
                         <div class="ai-avatar"><i class="fa-solid fa-robot"></i></div>
-                        <div class="ai-msg">${fallbackMsg} <br><br><small style="color:#EF4444; font-size:0.75rem; font-weight:normal;">(ملاحظة تقنية: ${err.message})</small></div>
+                        <div class="ai-msg">معلش يا فندم، المطبخ زحمة شوية دلوقتي 😅 جرب تسألني تاني كمان ثواني!<br><br><small style="color:#EF4444; font-size:0.75rem;">(ملاحظة تقنية: ${err.message})</small></div>
                     </div>`;
             }
             chatBox.scrollTop = chatBox.scrollHeight;
