@@ -460,11 +460,11 @@
             <h2 class="modal-title ai-premium-title">
                 <i class="fa-solid fa-robot"></i> SHRIMPY ASSISTANT ✨
             </h2>
-            <p style="color:var(--text-gray); font-size:0.9rem; font-weight:700; margin-bottom:15px;">اسألني عن المنيو، أو اطلب مني أرشحلك وجبة على قد ميزانيتك!</p>
+            <p style="color:var(--text-gray); font-size:0.9rem; font-weight:700; margin-bottom:15px;">اسألني عن المنيو، أو اطلب مني أضيفلك أكل لسلتك مباشرة!</p>
             
             <div class="quick-prompts">
                 <button class="prompt-chip" onclick="sendQuickPrompt('عايز وجبة في حدود 100 جنيه')">معايا 100 جنيه 💸</button>
-                <button class="prompt-chip" onclick="sendQuickPrompt('إيه أحسن ساندوتش عندكم؟')">أحسن ساندوتش؟ 🍔</button>
+                <button class="prompt-chip" onclick="sendQuickPrompt('ضيف ساندوتش جمبري للسلة')">ضيف للسلة 🛒</button>
                 <button class="prompt-chip" onclick="sendQuickPrompt('أرخص حاجة في المنيو إيه؟')">أرخص حاجة؟ 👇</button>
                 <button class="prompt-chip" onclick="sendQuickPrompt('رشحلي وجبة تكفي شخصين')">أكل لشخصين 👨‍🍳</button>
             </div>
@@ -472,12 +472,12 @@
             <div class="ai-chat-container" id="aiChatBox">
                 <div class="ai-msg-wrapper">
                     <img src="https://raw.githubusercontent.com/Shrimpyrestaurant/shrimpy-restaurant-menu/refs/heads/main/FB_IMG_1780348844982.jpg" alt="Assistant Logo" class="ai-avatar-img">
-                    <div class="ai-msg">أهلاً بيك يا فندم! 🦐 أنا المساعد الذكي من شرمبي. تحب أرشحلك تاكل إيه النهاردة؟</div>
+                    <div class="ai-msg">أهلاً بيك يا فندم! 🦐 أنا المساعد الذكي من شرمبي. اقدر أساعدك تختار وتطلب الأكل مباشرة من هنا.. تحب تاكل إيه النهاردة؟</div>
                 </div>
             </div>
             
             <div class="ai-input-box">
-                <input type="text" id="aiInput" placeholder="اكتب سؤالك هنا..." onkeypress="if(event.key === 'Enter') sendAIMessage()">
+                <input type="text" id="aiInput" placeholder="اكتب سؤالك أو طلبك هنا..." onkeypress="if(event.key === 'Enter') sendAIMessage()">
                 <button onclick="sendAIMessage()"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
         </div>
@@ -486,7 +486,6 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
-        // Setup PWA Logo directly
         const appIconUrl = "https://raw.githubusercontent.com/Shrimpyrestaurant/shrimpy-restaurant-menu/refs/heads/main/FB_IMG_1780348844982.jpg";
         document.getElementById('appleTouchIcon').href = appIconUrl;
 
@@ -506,7 +505,6 @@
         const swBlob = new Blob([swCode], {type: 'text/javascript'});
         if ('serviceWorker' in navigator) navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(err => console.log('SW Reg Failed', err));
 
-        // Data arrays remain the same
         const menuData = [
             { id: "cat_sandwiches", title: "الساندوتشات", icon: "fa-burger", items: [
                 { id: "s1", name: "ساندوتش جمبري", price: 35, isBestseller: true, image: "https://raw.githubusercontent.com/Shrimpyrestaurant/shrimpy-restaurant-menu/refs/heads/main/FB_IMG_1780894298521.jpg" }, 
@@ -822,7 +820,7 @@
             text += `\n*الطلبات:*\n`;
             cart.forEach(i => { 
                 subTotal += i.price * i.qty; 
-                text += `▪️ ${i.qty}x ${i.name} (${i.price * i.qty} ج)\n${i.notes ? `   ✏️ ملاحظة: ${i.notes}\n` : ''}`; 
+                text += `▪️ ${i.qty}x ${i.name} (${i.price * i.qty} ج)\n${i.notes ? `    ✏️ ملاحظة: ${i.notes}\n` : ''}`; 
             });
             
             text += `\nالإجمالي: ${subTotal} ج.م\n`;
@@ -838,11 +836,14 @@
         }
 
         function closeBranchPopup() { document.getElementById('branchPopup').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); }
+        
         function showToast(msg, type) {
             const t = document.createElement('div'); t.className = `toast ${type}`; t.innerHTML = type === 'success' ? `<i class="fa-solid fa-check-circle"></i> <span>${msg}</span>` : `<i class="fa-solid fa-circle-exclamation"></i> <span>${msg}</span>`;
             document.getElementById('toastContainer').appendChild(t); triggerHaptic(); setTimeout(() => { t.style.opacity = '0'; setTimeout(()=>t.remove(),500); }, 3000);
         }
+        
         function showModal(id) { document.getElementById('overlay').classList.add('active'); document.getElementById(id).classList.add('active'); document.body.style.overflow = 'hidden'; }
+        
         function closeAllModals() { document.getElementById('overlay').classList.remove('active'); document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('active')); document.getElementById('branchPopup').classList.remove('active'); document.body.style.overflow = 'auto'; }
 
         window.addEventListener('scroll', () => {
@@ -858,7 +859,6 @@
         const BACKEND_URL = "https://shrimpy-backend.vercel.app/chat";
         const BOT_AVATAR = "https://raw.githubusercontent.com/Shrimpyrestaurant/shrimpy-restaurant-menu/refs/heads/main/FB_IMG_1780348844982.jpg";
         
-        // مصفوفة الـ History لحل مشكلة النسيان
         let aiChatHistory = [];
 
         function openAIModal() {
@@ -878,7 +878,7 @@
 
             const chatBox = document.getElementById('aiChatBox');
             
-            // 1. إضافة رسالة المستخدم للـ History وعرضها
+            // إضافة رسالة المستخدم للواجهة والهيستوري الأصلي نظيفاً
             aiChatHistory.push({ role: "user", content: userText });
             chatBox.innerHTML += `
                 <div class="user-msg-wrapper">
@@ -887,7 +887,6 @@
             inputEl.value = '';
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            // 2. عرض علامة التحميل بصورة اللوجو
             const loadingId = 'loading-' + Date.now();
             chatBox.innerHTML += `
                 <div class="ai-msg-wrapper" id="${loadingId}">
@@ -899,11 +898,30 @@
             chatBox.scrollTop = chatBox.scrollHeight;
 
             try {
-                // 3. إرسال الطلب للسيرفر بتاعك مع الـ History
+                // تجميع بيانات المنيو والسلة لإرسالها بشكل خفي للبوت لكي يعرف ما يملكه العميل
+                const cartSummary = cart.length === 0 ? "السلة فارغة" : cart.map(c => `${c.qty}x ${c.name}`).join('، ');
+                const menuSummary = menuData.map(c => c.items.map(i => `${i.name} (ID: ${i.id})`).join(' | ')).join(' || ');
+                
+                // رسالة الحقن الخفية لتوجيه الـ AI للتصرف كمدير مبيعات يمكنه إصدار أوامر للسلة
+                const hiddenInstructions = `
+\n\n--- 
+(تعليمات نظام مخفية للمساعد - لا ترد عليها مباشرة، استخدمها كمرجع فقط):
+سلة العميل الحالية: ${cartSummary}
+المنيو المتاح وأكواد المنتجات (ID): ${menuSummary}
+
+القواعد (Rules):
+1- إذا طلب العميل إضافة منتج، رد بشكل طبيعي وتأكيدي، وفي نهاية النص ضع الكود: [ADD:id:qty] (مثال: [ADD:s1:2]).
+2- إذا طلب العميل عرض سلة مشترياته ضع الكود: [VIEW_CART] في نهاية كلامك.
+3- إذا طلب إنهاء الأوردر أو الدفع، ضع الكود: [CHECKOUT].`;
+
+                // نرسل الرسالة مضافاً إليها السياق المخفي
                 const response = await fetch(BACKEND_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: userText, history: aiChatHistory }) // الباك إند لازم يقرأ الـ history دلوقتي
+                    body: JSON.stringify({ 
+                        message: userText + hiddenInstructions, 
+                        history: aiChatHistory.slice(0, -1) // ارسال الهيستوري بدون الرسالة الأخيرة المضاف لها السياق لمنع التكرار
+                    }) 
                 });
 
                 const data = await response.json();
@@ -913,14 +931,62 @@
                     throw new Error(data.detail || "مشكلة في السيرفر");
                 }
 
-                // 4. حفظ رد البوت في الـ History وتنسيقه للعرض
-                aiChatHistory.push({ role: "assistant", content: data.reply });
-                let formattedText = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                let replyText = data.reply;
+                let addedItemsHtml = "";
+                let itemsAdded = false;
+
+                // التقاط أكواد الإضافة [ADD:id:qty]
+                const addRegex = /\[ADD:([a-zA-Z0-9_]+):(\d+)\]/gi;
+                let match;
+                while ((match = addRegex.exec(replyText)) !== null) {
+                    const itemId = match[1];
+                    const qty = parseInt(match[2]) || 1;
+                    
+                    let item = null;
+                    menuData.forEach(cat => cat.items.forEach(i => { if(i.id === itemId) item = i; }));
+                    
+                    if (item) {
+                        cart.push({ id: item.id + Date.now(), name: item.name, price: item.price, qty: qty, notes: 'بواسطة المساعد الذكي' });
+                        itemsAdded = true;
+                        addedItemsHtml += `
+                            <div style="background: rgba(16, 185, 129, 0.1); color: #10B981; padding: 8px 12px; border-radius: 8px; margin-top: 10px; font-size: 0.85rem; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; border: 1px solid rgba(16,185,129,0.2);" onclick="openCart()">
+                                <i class="fa-solid fa-check"></i> تمت إضافة ${qty} ${item.name} بنجاح
+                            </div><br>`;
+                    }
+                }
+                
+                // إزالة الأكواد من النص المعروض للعميل
+                replyText = replyText.replace(/\[ADD:[a-zA-Z0-9_]+:\d+\]/gi, '');
+
+                // التقاط كود عرض السلة
+                if (replyText.includes('[VIEW_CART]')) {
+                    setTimeout(openCart, 1500);
+                    replyText = replyText.replace(/\[VIEW_CART\]/gi, '');
+                }
+
+                // التقاط كود الدفع
+                if (replyText.includes('[CHECKOUT]')) {
+                    setTimeout(openCheckout, 1500);
+                    replyText = replyText.replace(/\[CHECKOUT\]/gi, '');
+                }
+
+                replyText = replyText.trim();
+
+                // تحديث واجهة السلة إذا تمت إضافات
+                if (itemsAdded) {
+                    saveCart();
+                    updateCartBtn();
+                    triggerHaptic();
+                }
+
+                aiChatHistory.push({ role: "assistant", content: replyText });
+                
+                let formattedText = replyText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
                 
                 chatBox.innerHTML += `
                     <div class="ai-msg-wrapper">
                         <img src="${BOT_AVATAR}" class="ai-avatar-img">
-                        <div class="ai-msg">${formattedText}</div>
+                        <div class="ai-msg">${formattedText} ${addedItemsHtml}</div>
                     </div>`;
             } catch (err) {
                 const loader = document.getElementById(loadingId);
@@ -929,7 +995,7 @@
                 chatBox.innerHTML += `
                     <div class="ai-msg-wrapper">
                         <img src="${BOT_AVATAR}" class="ai-avatar-img">
-                        <div class="ai-msg">معلش يا فندم، المطبخ زحمة شوية دلوقتي 😅 جرب تسألني تاني كمان ثواني!<br><br><small style="color:#EF4444; font-size:0.75rem;">(ملاحظة تقنية: ${err.message})</small></div>
+                        <div class="ai-msg">معلش يا فندم، النظام مشغول ثواني 😅 جرب تسألني تاني!<br><br><small style="color:#EF4444; font-size:0.75rem;">(${err.message})</small></div>
                     </div>`;
             }
             chatBox.scrollTop = chatBox.scrollHeight;
