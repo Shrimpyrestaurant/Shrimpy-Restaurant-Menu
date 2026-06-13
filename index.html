@@ -1,3 +1,8 @@
+Toast Notification
+Snackbar Animation
+Success Toast UI
+Floating Notification UI
+Floating Success Toast
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -142,13 +147,13 @@
         .splash-ring::before {
             content: '';
             position: absolute;
-            inset: -18px;
+            inset: -8px;
             border-radius: 50%;
             background: var(--gold);
-            opacity: 0.18;
-            filter: blur(20px);
+            opacity: 0.08;
+            filter: blur(8px);
             z-index: -1;
-            animation: ring-pulse 1.4s ease-in-out infinite alternate;
+            animation: ring-pulse-subtle 3s ease-in-out infinite alternate;
         }
         .splash-ring img {
             width: 100%;
@@ -232,14 +237,14 @@
             color: rgba(255, 255, 255, 0.3);
             text-transform: uppercase;
         }
-        @keyframes ring-pulse {
+        @keyframes ring-pulse-subtle {
             0% {
-                transform: scale(0.8);
-                opacity: 0.08;
+                transform: scale(0.9);
+                opacity: 0.04;
             }
             100% {
-                transform: scale(1.25);
-                opacity: 0.45;
+                transform: scale(1.15);
+                opacity: 0.18;
             }
         }
         @keyframes splash-float {
@@ -1272,37 +1277,36 @@
         /* ── فاصل متحرك بين المنيو والفوتر ── */
         .dynamic-separator {
             text-align: center;
-            margin: 28px 0 20px;
+            margin: 32px 0 24px;
             position: relative;
             z-index: 2;
         }
         .dynamic-separator .sep-line {
-            width: 120px;
+            width: 180px;
             height: 3px;
             background: var(--gold);
             margin: 0 auto;
             border-radius: 3px;
-            animation: separatorPulse 2.5s ease-in-out infinite;
+            animation: separatorGlow 3s ease-in-out infinite;
         }
-        @keyframes separatorPulse {
-            0%,
-            100% {
+        @keyframes separatorGlow {
+            0%, 100% {
                 transform: scaleX(1);
-                opacity: 0.7;
+                opacity: 0.5;
+                box-shadow: 0 0 6px rgba(201, 169, 110, 0.3);
                 background: var(--gold);
-                box-shadow: 0 0 6px var(--gold);
             }
             30% {
-                transform: scaleX(1.4);
+                transform: scaleX(1.5);
                 opacity: 1;
+                box-shadow: 0 0 18px rgba(255, 90, 0, 0.5);
                 background: var(--coral);
-                box-shadow: 0 0 14px var(--coral-glow);
             }
             60% {
-                transform: scaleX(0.8);
+                transform: scaleX(0.9);
                 opacity: 0.9;
+                box-shadow: 0 0 14px rgba(212, 184, 122, 0.6);
                 background: var(--gold-light);
-                box-shadow: 0 0 10px var(--gold-light);
             }
         }
 
@@ -2009,32 +2013,6 @@
             font-size: 1.15rem;
         }
 
-        /* ── LOYALTY ── */
-        .loyalty-badge {
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            color: #000;
-            padding: 6px 14px;
-            border-radius: 30px;
-            font-size: .75rem;
-            font-weight: 900;
-            letter-spacing: 1px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            animation: loyaltyShine 2s ease-in-out infinite;
-        }
-        @keyframes loyaltyShine {
-            0%,
-            100% {
-                box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
-            }
-            50% {
-                box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
-            }
-        }
-
         /* ── RECURRING ORDERS ── */
         .recurring-wrap {
             padding: 0 18px 20px;
@@ -2246,9 +2224,6 @@
         </div>
     </div>
 
-    <!-- ══════════════ LOYALTY BAR ══════════════ -->
-    <div id="loyaltyBar" style="text-align:center;padding:0 20px;margin-bottom:10px;display:none;"></div>
-
     <!-- ══════════════ RECURRING ORDERS ══════════════ -->
     <div class="recurring-wrap" id="recurringWrap">
         <div class="sheader"><span class="slabel" data-lang="recurring_label">🧡 طلباتك المتكررة</span><div class="stitle">ORDER AGAIN</div></div>
@@ -2278,8 +2253,8 @@
         </div>
         <!-- أيقونات السوشيال ميديا تحت العنوان ورقم التليفون -->
         <div class="socials">
-            <a href="https://www.facebook.com/" target="_blank" rel="noopener"><i class="fa-brands fa-facebook-f"></i></a>
-            <a href="https://www.instagram.com/" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i></a>
+            <a href="https://www.facebook.com/share/1EWhfqqESf/" target="_blank" rel="noopener"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="https://www.instagram.com/shriimpyy1?igsh=MTA5MXJyd2h4bm8xMg==" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i></a>
             <a href="https://wa.me/201101012543" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i></a>
         </div>
         <!-- الشريط المتحرك بين السوشيال والحقوق -->
@@ -2361,7 +2336,7 @@
                 <div class="orad"><input type="radio" name="otype" id="typeP" value="pickup" onchange="toggleAddr()"><label for="typeP"><i class="fa-solid fa-store"></i><span data-lang="pickup">من الفرع</span></label></div>
             </div>
             <div class="fgroup"><label data-lang="c_name">الاسم الكريم</label><input type="text" id="cName" data-lang-placeholder="c_name_ph" placeholder="اكتب اسمك هنا"></div>
-            <div class="fgroup"><label data-lang="c_phone">رقم الهاتف</label><input type="tel" id="cPhone" placeholder="01xxxxxxxxx"></div>
+            <div class="fgroup"><label data-lang="c_phone">رقم الهاتف</label><input type="tel" id="cPhone" data-lang-placeholder="c_phone_ph" placeholder="01xxxxxxxxx"></div>
             <div id="addrGrp">
                 <div class="fgroup" style="position:relative">
                     <label data-lang="c_area">منطقة التوصيل</label>
@@ -2780,6 +2755,7 @@
                 c_name: 'الاسم الكريم',
                 c_name_ph: 'اكتب اسمك هنا',
                 c_phone: 'رقم الهاتف',
+                c_phone_ph: '01xxxxxxxxx',
                 c_area: 'منطقة التوصيل',
                 c_area_ph: 'ابحث واختر منطقتك...',
                 c_addr: 'العنوان بالتفصيل',
@@ -2808,8 +2784,6 @@
                 invalid_phone: 'رقم الهاتف غير صحيح',
                 fill_area: 'يرجى اختيار منطقة التوصيل',
                 fill_addr: 'يرجى كتابة العنوان بالتفصيل',
-                loyalty_gift: 'مبروك! لك خصم 10% على طلبك القادم. اضغط لاستلام الكوبون',
-                loyalty_coupon: 'كوبون الولاء: LOYALTY10 (خصم 10%) استخدمه في السلة 🎁',
                 add_fav: 'أُضيف للمفضلة ❤️',
                 remove_fav: 'أُزيل من المفضلة',
                 add_cart: 'تمت إضافة',
@@ -2823,6 +2797,8 @@
                 cancel_btn: 'إلغاء',
                 swipe_fav: 'اسحب لليمين للإضافة للمفضلة',
                 swipe_cart: 'اسحب لليسار للإضافة للسلة',
+                delete_order: 'حذف',
+                select_order: 'تحديد',
             },
             en: {
                 install_title: 'SHRIMPY App',
@@ -2853,6 +2829,7 @@
                 c_name: 'Full Name',
                 c_name_ph: 'Enter your name',
                 c_phone: 'Phone Number',
+                c_phone_ph: '01xxxxxxxxx',
                 c_area: 'Delivery Area',
                 c_area_ph: 'Search & select your area...',
                 c_addr: 'Detailed Address',
@@ -2881,8 +2858,6 @@
                 invalid_phone: 'Invalid phone number',
                 fill_area: 'Please select a delivery area',
                 fill_addr: 'Please enter your detailed address',
-                loyalty_gift: 'Congrats! You earned 10% off your next order. Tap to claim',
-                loyalty_coupon: 'Loyalty coupon: LOYALTY10 (10% off) Use it in your cart 🎁',
                 add_fav: 'Added to favorites ❤️',
                 remove_fav: 'Removed from favorites',
                 add_cart: 'Added',
@@ -2896,12 +2871,16 @@
                 cancel_btn: 'Cancel',
                 swipe_fav: 'Swipe right to favorite',
                 swipe_cart: 'Swipe left to add to cart',
+                delete_order: 'Delete',
+                select_order: 'Select',
             }
         };
 
         function t(key) { return translations[currentLang] && translations[currentLang][key] ? translations[currentLang][
                 key
             ] : key; }
+
+        function priceStr(p) { return p + (currentLang === 'en' ? ' EGP' : ' ج.م'); }
 
         function toggleLang() {
             currentLang = currentLang === 'ar' ? 'en' : 'ar';
@@ -2949,7 +2928,6 @@
         let deferredPWA;
         let swipeState = { startX: 0, startY: 0, currentX: 0, isSwiping: false, direction: null, element: null,
             container: null };
-        let loyaltyPoints = 0;
         let ordersHistory = [];
         let pendingMerge = null;
 
@@ -3006,6 +2984,14 @@
 
         /* ═══════════════════════ INIT ═══════════════════════ */
         window.addEventListener('load', () => {
+            // الوضع التلقائي من النظام
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.body.classList.remove('light');
+                document.getElementById('modeBtn').innerHTML = '<i class="fa-solid fa-sun"></i>';
+            } else {
+                document.body.classList.add('light');
+                document.getElementById('modeBtn').innerHTML = '<i class="fa-solid fa-moon"></i>';
+            }
             if (localStorage.getItem('shrimpy_lang')) {
                 currentLang = localStorage.getItem('shrimpy_lang');
                 document.documentElement.lang = currentLang;
@@ -3034,8 +3020,6 @@
                 renderRecurring();
                 initScrollReveal();
                 initGlobalTouchHandler();
-                updateLoyaltyBar();
-                checkLoyaltyReward();
                 requestNotificationPermission();
             }, 2200);
         });
@@ -3052,49 +3036,13 @@
                 updateCart(); }
             const f = localStorage.getItem('shrimpy_favs');
             if (f) { favs = new Set(JSON.parse(f)); }
-            const lp = localStorage.getItem('shrimpy_loyalty');
-            if (lp) { loyaltyPoints = parseInt(lp) || 0; }
             const oh = localStorage.getItem('shrimpy_orders');
             if (oh) { ordersHistory = JSON.parse(oh); }
         }
 
         function saveFavs() { localStorage.setItem('shrimpy_favs', JSON.stringify([...favs])); }
 
-        function saveLoyalty() { localStorage.setItem('shrimpy_loyalty', loyaltyPoints);
-            updateLoyaltyBar(); }
-
         function saveOrders() { localStorage.setItem('shrimpy_orders', JSON.stringify(ordersHistory)); }
-
-        /* ═══════════════════════ LOYALTY ═══════════════════════ */
-        function addLoyaltyPoints(amount) { loyaltyPoints += amount;
-            saveLoyalty();
-            checkLoyaltyReward(); }
-
-        function checkLoyaltyReward() {
-            if (loyaltyPoints >= 500 && localStorage.getItem('loyalty_claimed') !== 'true') {
-                const bar = document.getElementById('loyaltyBar');
-                bar.style.display = 'block';
-                bar.innerHTML =
-                    `<div class="loyalty-badge" onclick="claimLoyaltyReward()"><i class="fa-solid fa-gift"></i>${t('loyalty_gift')}</div>`;
-            }
-        }
-
-        function claimLoyaltyReward() {
-            localStorage.setItem('loyalty_claimed', 'true');
-            document.getElementById('loyaltyBar').style.display = 'none';
-            toast(t('loyalty_coupon'), 'ok');
-            hapticSuccess();
-        }
-
-        function updateLoyaltyBar() {
-            const bar = document.getElementById('loyaltyBar');
-            if (localStorage.getItem('loyalty_claimed') === 'true') return;
-            if (loyaltyPoints > 0 && loyaltyPoints < 500) {
-                bar.style.display = 'block';
-                bar.innerHTML =
-                    `<div class="loyalty-badge"><i class="fa-solid fa-star"></i>${currentLang === 'en' ? 'Points: ' + loyaltyPoints + '/500' : 'نقاطك: ' + loyaltyPoints + '/500'}</div>`;
-            }
-        }
 
         /* ═══════════════════════ RECURRING ORDERS ═══════════════════════ */
         function renderRecurring() {
@@ -3125,17 +3073,32 @@
             } else {
                 list.innerHTML = '';
                 ordersHistory.slice().reverse().forEach((order, idx) => {
+                    const originalIdx = ordersHistory.length - 1 - idx;
                     list.innerHTML += `<div class="pcard" style="margin-bottom:12px;border-radius:var(--r24);box-shadow:var(--card-shadow);flex-direction:column;align-items:stretch;gap:10px">
                 <div style="display:flex;justify-content:space-between;align-items:center">
                   <span style="font-weight:800;color:var(--w95)">${order.date}</span>
-                  <span class="pprice">${order.total} EGP</span>
+                  <span class="pprice">${priceStr(order.total)}</span>
                 </div>
                 <div style="color:var(--w50);font-size:.82rem;font-weight:700">${order.items.map(i => i.qty + 'x ' + i.name).join('، ')}</div>
-                <button class="btn-primary" style="border-radius:var(--r10);padding:10px" onclick="reorder(${ordersHistory.length - 1 - idx})"><i class="fa-solid fa-rotate"></i>${t('reorder_btn')}</button>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <button class="btn-primary" style="border-radius:var(--r10);padding:10px;flex:1;min-width:90px" onclick="reorder(${originalIdx})"><i class="fa-solid fa-rotate"></i>${t('reorder_btn')}</button>
+                  <button class="btn-copy-order" style="border-radius:var(--r10);padding:10px;flex:1;min-width:90px;background:var(--coral);border:1px solid var(--coral);color:#fff" onclick="deleteOrder(${originalIdx})"><i class="fa-solid fa-trash"></i>${t('delete_order')}</button>
+                </div>
               </div>`;
                 });
             }
             showSheet('ordersSheet');
+        }
+
+        function deleteOrder(idx) {
+            if (confirm(currentLang === 'en' ? 'Delete this order?' : 'حذف هذا الطلب؟')) {
+                ordersHistory.splice(idx, 1);
+                saveOrders();
+                hapticMedium();
+                openOrders();
+                renderRecurring();
+                toast(currentLang === 'en' ? 'Order deleted' : 'تم حذف الطلب', 'ok');
+            }
         }
 
         function reorder(idx) {
@@ -3198,14 +3161,58 @@
               ${imgHtml}
               <div class="bs-badge">${currentLang === 'en' ? 'BESTSELLER' : 'الأكثر طلباً'}</div>
               <div class="bs-name">${getItemName(item)}</div>
-              <div class="bs-price">${item.price} EGP</div>
+              <div class="bs-price">${priceStr(item.price)}</div>
             </div>`;
                 }
             }));
             if (has) document.getElementById('bsWrap').style.display = 'block';
             else document.getElementById('bsWrap').style.display = 'none';
             requestAnimationFrame(() => refreshReveal());
+            // بدء الأنيميشن المتأرجح التلقائي
+            startAutoSway();
         }
+
+        /* ═══════════════════════ AUTO SWAY ANIMATION (BESTSELLERS) ═══════════════════════ */
+        let swayAnimFrame = null;
+        let swayOffset = 0;
+        let swayDirection = 1; // 1 = right (for LTR), -1 = left (for RTL) – will be set by dir
+        const swaySpeed = 0.25; // pixels per frame ~ 15px/s at 60fps
+        const swayMax = 110; // max pixels to sway each side
+
+        function startAutoSway() {
+            const list = document.getElementById('bsList');
+            if (!list || list.children.length === 0) return;
+            // cancel any previous animation
+            if (swayAnimFrame) cancelAnimationFrame(swayAnimFrame);
+            // set direction based on document direction
+            swayDirection = (document.dir === 'rtl') ? -1 : 1;
+            swayOffset = 0;
+            // apply initial transform
+            list.style.transform = `translateX(${swayOffset}px)`;
+            function step() {
+                swayOffset += swaySpeed * swayDirection;
+                if (Math.abs(swayOffset) >= swayMax) {
+                    swayDirection *= -1;
+                    swayOffset = Math.sign(swayOffset) * swayMax;
+                }
+                list.style.transform = `translateX(${swayOffset}px)`;
+                swayAnimFrame = requestAnimationFrame(step);
+            }
+            swayAnimFrame = requestAnimationFrame(step);
+        }
+
+        // restart sway when language changes – called from toggleLang after renderBestsellers()
+        // but renderBestsellers already calls startAutoSway, so it's covered.
+
+        // also restart when filterMenu shows the bsWrap again
+        const originalFilterMenu = filterMenu;
+        filterMenu = function() {
+            originalFilterMenu();
+            const bsWrap = document.getElementById('bsWrap');
+            if (bsWrap && bsWrap.style.display === 'block') {
+                startAutoSway();
+            }
+        };
 
         /* ═══════════════════════ MENU RENDER ═══════════════════════ */
         function renderMenu() {
@@ -3247,7 +3254,7 @@
                   <div class="pinfo">
                     <h3 class="pname">${getItemName(item)}</h3>
                     <div class="pbot">
-                      <span class="pprice">${item.price} EGP</span>
+                      <span class="pprice">${priceStr(item.price)}</span>
                       <div class="pactions">
                         <button class="fav-btn${isFav?' active':''}" id="fav-${item.id}" onclick="toggleFav('${item.id}',event)" aria-label="مفضلة">
                           <i class="fa-${isFav?'solid':'regular'} fa-heart"></i>
@@ -3275,7 +3282,7 @@
             sides.forEach(item => {
                 list.innerHTML += `<div class="sugitem">
               <span>${getItemName(item)}</span>
-              <span class="sp">${item.price} EGP</span>
+              <span class="sp">${priceStr(item.price)}</span>
               <button onclick="addSug('${item.id}','${item.name}',${item.price},event)"><i class="fa-solid fa-plus"></i></button>
             </div>`;
             });
@@ -3567,7 +3574,7 @@
                 <div onclick="openModal('${item.id}');closeAll()" style="display:flex;gap:13px;align-items:center;flex-grow:1;cursor:pointer">
                   ${imgH}
                   <div class="pinfo"><h3 class="pname">${getItemName(item)}</h3>
-                    <div class="pbot"><span class="pprice">${item.price} EGP</span>
+                    <div class="pbot"><span class="pprice">${priceStr(item.price)}</span>
                       <button class="add-btn" onclick="quickAdd('${item.id}',event)"><i class="fa-solid fa-plus"></i></button>
                     </div>
                   </div>
@@ -3676,7 +3683,7 @@
             document.getElementById('mTitle').textContent = getItemName(item);
             document.getElementById('mNotes').value = '';
             document.getElementById('mQty').textContent = '1';
-            document.getElementById('mPriceBtn').textContent = item.price + ' EGP';
+            document.getElementById('mPriceBtn').textContent = priceStr(item.price);
             const img = document.getElementById('mImg');
             if (item.img && !item.isSide) { img.src = item.img;
                 img.style.display = 'block'; } else img.style.display = 'none';
@@ -3723,7 +3730,7 @@
             if (curProd.qty + d > 0) {
                 curProd.qty += d;
                 document.getElementById('mQty').textContent = curProd.qty;
-                document.getElementById('mPriceBtn').textContent = (curProd.price * curProd.qty) + ' EGP';
+                document.getElementById('mPriceBtn').textContent = priceStr(curProd.price * curProd.qty);
                 hapticLight();
             }
         }
@@ -3836,7 +3843,7 @@
                 cart.forEach(i => { items += i.qty;
                     total += i.price * i.qty; });
                 document.getElementById('cCount').textContent = items;
-                document.getElementById('cTotal').textContent = total + ' EGP';
+                document.getElementById('cTotal').textContent = priceStr(total);
             } else {
                 fc.classList.remove('on');
             }
@@ -3848,8 +3855,8 @@
             let txt = '🦐 Shrimpy Order:\n\n';
             cart.forEach(i => { sub += i.price * i.qty;
                 txt +=
-                `▪️ ${i.qty}x ${getItemName({ name: i.name, nameEn: i.nameEn })} (${i.price * i.qty} EGP)\n${i.notes ? '  ✏️ ' + i.notes + '\n' : ''}`; });
-            txt += `\nTotal: ${sub - discount} EGP`;
+                `▪️ ${i.qty}x ${getItemName({ name: i.name, nameEn: i.nameEn })} (${priceStr(i.price * i.qty)})\n${i.notes ? '  ✏️ ' + i.notes + '\n' : ''}`; });
+            txt += `\nTotal: ${priceStr(sub - discount)}`;
             navigator.clipboard.writeText(txt).then(() => {
                 toast(currentLang === 'en' ? '📋 Order copied!' : '📋 تم نسخ الطلب!', 'ok');
                 hapticMedium();
@@ -3872,7 +3879,7 @@
                     list.innerHTML += `<div class="ci">
                 <div style="flex-grow:1;padding-left:12px">
                   <div class="ci-name">${displayName}</div>
-                  <div class="ci-price">${item.price * item.qty} EGP</div>
+                  <div class="ci-price">${priceStr(item.price * item.qty)}</div>
                   ${item.notes ? `<div style="font-size:.73rem;color:var(--w50);margin-top:3px;font-weight:700">${item.notes}</div>` : ''}
                 </div>
                 <div class="qty-sel">
@@ -3884,11 +3891,11 @@
                 });
             }
             document.getElementById('sumCnt').textContent = items;
-            document.getElementById('sumSub').textContent = sub + ' EGP';
+            document.getElementById('sumSub').textContent = priceStr(sub);
             if (discount > 0) { document.getElementById('discRow').style.display = 'flex';
-                document.getElementById('sumDisc').textContent = discount + ' EGP'; } else document.getElementById(
+                document.getElementById('sumDisc').textContent = priceStr(discount); } else document.getElementById(
                 'discRow').style.display = 'none';
-            document.getElementById('sumTot').textContent = Math.max(0, sub - discount) + ' EGP';
+            document.getElementById('sumTot').textContent = priceStr(Math.max(0, sub - discount));
             document.getElementById('couponInp').placeholder = currentLang === 'en' ? 'Coupon Code' : 'كود الخصم';
             document.querySelector('#cartSheet .btn-primary').textContent = t('checkout_btn');
             document.querySelector('#cartSheet .modal-title').textContent = t('cart_title');
@@ -3917,7 +3924,7 @@
                 if (localStorage.getItem('coupon_used_shrimpy20') === 'true') return toast(t('coupon_used'), 'err');
                 discount = 20;
                 localStorage.setItem('coupon_used_shrimpy20', 'true');
-                toast(t('coupon_ok') + ' 20 EGP ✅', 'ok');
+                toast(t('coupon_ok') + ' ' + priceStr(20) + ' ✅', 'ok');
                 hapticSuccess();
             } else if (code === 'LOYALTY10') {
                 discount = Math.floor(cart.reduce((s, i) => s + i.price * i.qty, 0) * 0.1);
@@ -3937,15 +3944,18 @@
             document.querySelector('#checkSheet .modal-title').textContent = t('checkout_title');
             document.querySelector('#checkSheet label[for="typeD"] span').textContent = t('delivery');
             document.querySelector('#checkSheet label[for="typeP"] span').textContent = t('pickup');
-            document.querySelector('#checkSheet .fgroup:nth-of-type(1) label').textContent = t('c_name');
             document.getElementById('cName').placeholder = t('c_name_ph');
-            document.querySelector('#checkSheet .fgroup:nth-of-type(2) label').textContent = t('c_phone');
-            document.querySelector('#addrGrp .fgroup:nth-of-type(1) label').textContent = t('c_area');
+            document.getElementById('cPhone').placeholder = t('c_phone_ph');
             document.getElementById('areaInp').placeholder = t('c_area_ph');
-            document.querySelector('#addrGrp .fgroup:nth-of-type(2) label').textContent = t('c_addr');
             document.getElementById('cAddr').placeholder = t('c_addr_ph');
             document.querySelector('#addrGrp .dnote span').textContent = t('delivery_note');
             document.querySelector('#checkSheet .btn-primary span').textContent = t('send_wa');
+            // تحديث تسميات الحقول باستخدام المحددات الصحيحة
+            const labels = document.querySelectorAll('#checkSheet .fgroup > label[data-lang]');
+            if (labels.length >= 2) {
+                labels[0].textContent = t('c_name');
+                labels[1].textContent = t('c_phone');
+            }
             setTimeout(() => showSheet('checkSheet'), 380);
         }
 
@@ -3985,7 +3995,6 @@
                 type: isDel ? 'دليفري' : 'استلام'
             });
             saveOrders();
-            addLoyaltyPoints(sub);
             hapticSuccess();
             launchConfetti();
 
