@@ -1,8 +1,3 @@
-Toast Notification
-Snackbar Animation
-Success Toast UI
-Floating Notification UI
-Floating Success Toast
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -3168,51 +3163,7 @@ Floating Success Toast
             if (has) document.getElementById('bsWrap').style.display = 'block';
             else document.getElementById('bsWrap').style.display = 'none';
             requestAnimationFrame(() => refreshReveal());
-            // بدء الأنيميشن المتأرجح التلقائي
-            startAutoSway();
         }
-
-        /* ═══════════════════════ AUTO SWAY ANIMATION (BESTSELLERS) ═══════════════════════ */
-        let swayAnimFrame = null;
-        let swayOffset = 0;
-        let swayDirection = 1; // 1 = right (for LTR), -1 = left (for RTL) – will be set by dir
-        const swaySpeed = 0.25; // pixels per frame ~ 15px/s at 60fps
-        const swayMax = 110; // max pixels to sway each side
-
-        function startAutoSway() {
-            const list = document.getElementById('bsList');
-            if (!list || list.children.length === 0) return;
-            // cancel any previous animation
-            if (swayAnimFrame) cancelAnimationFrame(swayAnimFrame);
-            // set direction based on document direction
-            swayDirection = (document.dir === 'rtl') ? -1 : 1;
-            swayOffset = 0;
-            // apply initial transform
-            list.style.transform = `translateX(${swayOffset}px)`;
-            function step() {
-                swayOffset += swaySpeed * swayDirection;
-                if (Math.abs(swayOffset) >= swayMax) {
-                    swayDirection *= -1;
-                    swayOffset = Math.sign(swayOffset) * swayMax;
-                }
-                list.style.transform = `translateX(${swayOffset}px)`;
-                swayAnimFrame = requestAnimationFrame(step);
-            }
-            swayAnimFrame = requestAnimationFrame(step);
-        }
-
-        // restart sway when language changes – called from toggleLang after renderBestsellers()
-        // but renderBestsellers already calls startAutoSway, so it's covered.
-
-        // also restart when filterMenu shows the bsWrap again
-        const originalFilterMenu = filterMenu;
-        filterMenu = function() {
-            originalFilterMenu();
-            const bsWrap = document.getElementById('bsWrap');
-            if (bsWrap && bsWrap.style.display === 'block') {
-                startAutoSway();
-            }
-        };
 
         /* ═══════════════════════ MENU RENDER ═══════════════════════ */
         function renderMenu() {
