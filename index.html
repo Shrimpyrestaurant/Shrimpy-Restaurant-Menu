@@ -16,8 +16,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Tajawal:wght@400;500;700;800;900&family=Cormorant+Garamond:wght@600;700&family=El+Messiri:wght@400;600;700&family=Inter:wght@500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- إضافة واجهة برمجة يوتيوب للتحكم في الموسيقى -->
-    <script src="https://www.youtube.com/iframe_api"></script>
+    <!-- ملاحظة: تم إزالة تحميل YouTube API المباشر لتسريع التحميل، وسيتم تحميله تلقائياً عند أول ضغطة على زر الموسيقى -->
     <style>
         :root {
             --bg: #030303;
@@ -2388,105 +2387,66 @@
     <div id="youtubePlayerContainer" style="position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;"></div>
 
     <script>
-        /* ═══════════════════════ YOUTUBE PIANO MUSIC PLAYER ═══════════════════════ */
+        /* ═══════════════════════ YOUTUBE PIANO MUSIC PLAYER (LAZY LOADED) ═══════════════════════ */
         let youtubePlayer = null;
         let musicEnabled = true;
         let playerReady = false;
+        let youtubeAPIReady = false;
 
-        // تحميل الـ API تلقائياً واستدعاء الدالة عند الجاهزية
+        // سيتم استدعاؤها عند تحميل API لأول مرة
         function onYouTubeIframeAPIReady() {
-            console.log('YouTube IFrame API ready');
-            // إنشاء المشغل مخفي
+            youtubeAPIReady = true;
             youtubePlayer = new YT.Player('youtubePlayerContainer', {
-                videoId: 'mD0ZSO7LfCA', // فيديو البيانو المطلوب
+                videoId: 'mD0ZSO7LfCA',
                 playerVars: {
-                    autoplay: 0,
-                    controls: 0,
-                    disablekb: 1,
-                    fs: 0,
-                    iv_load_policy: 3,
-                    loop: 1,
-                    modestbranding: 1,
-                    playsinline: 1,
-                    rel: 0,
-                    showinfo: 0,
+                    autoplay: 0, controls: 0, disablekb: 1, fs: 0,
+                    iv_load_policy: 3, loop: 1, modestbranding: 1,
+                    playsinline: 1, rel: 0, showinfo: 0,
                 },
                 events: {
-                    onReady: onPlayerReady,
-                    onStateChange: onPlayerStateChange,
-                    onError: onPlayerError
+                    onReady: (event) => {
+                        playerReady = true;
+                        event.target.setVolume(50);
+                        if (musicEnabled) event.target.playVideo();
+                    },
+                    onStateChange: (event) => {
+                        if (event.data === YT.PlayerState.ENDED) event.target.playVideo();
+                    },
+                    onError: () => { playerReady = false; }
                 }
             });
         }
 
-        function onPlayerReady(event) {
-            playerReady = true;
-            console.log('YouTube player ready');
-            // ضبط الصوت بنسبة 50% (أعلى من السابق)
-            youtubePlayer.setVolume(50);
-            // إذا كانت الموسيقى مفعلة ابدأ التشغيل
-            if (musicEnabled) {
-                // التشغيل يحتاج إلى تفاعل مستخدم، سيتم في toggleMusic عند الضغط
-            }
+        function loadYouTubeAPI() {
+            if (youtubeAPIReady || document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) return;
+            const tag = document.createElement('script');
+            tag.src = 'https://www.youtube.com/iframe_api';
+            const firstScript = document.getElementsByTagName('script')[0];
+            firstScript.parentNode.insertBefore(tag, firstScript);
         }
 
-        function onPlayerStateChange(event) {
-            // عند انتهاء الفيديو، أعد تشغيله (لحلقة مستمرة)
-            if (event.data === YT.PlayerState.ENDED) {
-                youtubePlayer.playVideo();
-            }
-        }
-
-        function onPlayerError(event) {
-            console.error('YouTube player error:', event.data);
-            // في حالة الخطأ نعود إلى الوضع الصامت
-            playerReady = false;
-        }
-
-        // تفعيل/تعطيل الموسيقى من زر الهيرو
         function toggleMusic() {
             const btn = document.getElementById('musicBtn');
-            if (!youtubePlayer || !playerReady) {
-                // اليوتيوب غير جاهز، نحاول التحميل عند الضغط
-                if (!youtubePlayer) {
-                    // قد يكون الـ API لم يحمل بعد، نضبط العلم وننتظر
-                    console.log('YouTube player not ready yet, trying again...');
-                }
+            if (!youtubeAPIReady) {
+                loadYouTubeAPI();
                 hapticLight();
                 return;
             }
-
+            if (!playerReady) { hapticLight(); return; }
             if (musicEnabled) {
-                // إيقاف الموسيقى
                 youtubePlayer.pauseVideo();
                 musicEnabled = false;
                 btn.classList.remove('music-active');
                 btn.classList.add('music-muted');
-                btn.innerHTML = '<i class="fa-solid fa-music"></i>';
-                btn.title = 'Piano Music: Off';
             } else {
-                // تشغيل الموسيقى
                 youtubePlayer.playVideo();
                 musicEnabled = true;
                 btn.classList.add('music-active');
                 btn.classList.remove('music-muted');
-                btn.innerHTML = '<i class="fa-solid fa-music"></i>';
-                btn.title = 'Piano Music: On';
             }
             localStorage.setItem('shrimpy_music', musicEnabled ? '1' : '0');
             hapticLight();
         }
-
-        // محاولة بدء الموسيقى عند أول تفاعل (حل بديل)
-        function tryStartMusicOnInteraction() {
-            if (musicEnabled && youtubePlayer && playerReady) {
-                youtubePlayer.playVideo();
-            }
-            document.removeEventListener('click', tryStartMusicOnInteraction);
-            document.removeEventListener('touchstart', tryStartMusicOnInteraction);
-        }
-        document.addEventListener('click', tryStartMusicOnInteraction, { once: true });
-        document.addEventListener('touchstart', tryStartMusicOnInteraction, { once: true });
 
         /* ═══════════════════════ PLACEHOLDER ANIMATION (RAF) ═══════════════════════ */
         const searchInput = document.getElementById('searchInput');
@@ -2563,13 +2523,11 @@
             }
         }
 
-        // بدء الأنيميشن بعد تحميل الصفحة
         window.addEventListener('load', () => {
             updatePlaceholderText();
             startPlaceholderAnimation();
         });
 
-        // إعادة تشغيل الأنيميشن عند تغيير اللغة
         const originalToggleLang = toggleLang;
         toggleLang = function() {
             originalToggleLang();
@@ -2579,21 +2537,14 @@
             }
         };
 
-        /* ═══════════════════════ HAPTIC VIBRATION (تم التحقق من الدعم) ═══════════════════════ */
+        /* ═══════════════════════ HAPTIC VIBRATION ═══════════════════════ */
         function hapticLight() { if ('vibrate' in navigator) navigator.vibrate(8); }
-
         function hapticMedium() { if ('vibrate' in navigator) navigator.vibrate(12); }
-
         function hapticHeavy() { if ('vibrate' in navigator) navigator.vibrate([15, 8, 15]); }
-
         function hapticSuccess() { if ('vibrate' in navigator) navigator.vibrate([8, 25, 8, 25, 8]); }
-
         function hapticError() { if ('vibrate' in navigator) navigator.vibrate([25, 15, 25, 15, 50]); }
-
         function hapticCartAdd() { if ('vibrate' in navigator) navigator.vibrate([8, 12, 15]); }
-
         function hapticFav() { if ('vibrate' in navigator) navigator.vibrate([6, 10, 6]); }
-
         function hapticSwipe() { if ('vibrate' in navigator) navigator.vibrate(5); }
 
         /* ═══════════════════════ RIPPLE EFFECT ═══════════════════════ */
@@ -2771,7 +2722,7 @@
                 empty_orders: 'لا توجد طلبات سابقة',
                 empty_orders_sub: 'أرسل طلبك الأول الآن',
                 reorder_btn: 'أعد الطلب',
-                min_order: 'الحد الأدنى للطلب 100 ج.م', // احتفظنا بالنص للترجمة فقط
+                min_order: 'الحد الأدنى للطلب 100 ج.م',
                 coupon_invalid: 'كوبون غير صحيح',
                 coupon_used: 'تم استخدام الكوبون من قبل',
                 coupon_ok: 'خصم',
@@ -2871,10 +2822,7 @@
             }
         };
 
-        function t(key) { return translations[currentLang] && translations[currentLang][key] ? translations[currentLang][
-                key
-            ] : key; }
-
+        function t(key) { return translations[currentLang] && translations[currentLang][key] ? translations[currentLang][key] : key; }
         function priceStr(p) { return p + (currentLang === 'en' ? ' EGP' : ' ج.م'); }
 
         function toggleLang() {
@@ -2882,8 +2830,7 @@
             document.documentElement.lang = currentLang;
             document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
             document.querySelectorAll('[data-lang]').forEach(el => { el.textContent = t(el.getAttribute('data-lang')); });
-            document.querySelectorAll('[data-lang-placeholder]').forEach(el => { el.placeholder = t(el.getAttribute(
-                    'data-lang-placeholder')); });
+            document.querySelectorAll('[data-lang-placeholder]').forEach(el => { el.placeholder = t(el.getAttribute('data-lang-placeholder')); });
             updateAllItemNames();
             renderMenu();
             renderBestsellers();
@@ -2893,7 +2840,6 @@
             localStorage.setItem('shrimpy_lang', currentLang);
             hapticMedium();
             toast(currentLang === 'en' ? '🇬🇧 English' : '🇪🇬 العربية', 'ok');
-            // إعادة تشغيل الأنيميشن بلغة جديدة
             updatePlaceholderText();
             if (document.activeElement !== searchInput || searchInput.value.trim() === '') {
                 startPlaceholderAnimation();
@@ -2921,8 +2867,7 @@
         let curProd = null;
         let discount = 0;
         let deferredPWA;
-        let swipeState = { startX: 0, startY: 0, currentX: 0, isSwiping: false, direction: null, element: null,
-            container: null };
+        let swipeState = { startX: 0, startY: 0, currentX: 0, isSwiping: false, direction: null, element: null, container: null };
         let ordersHistory = [];
         let pendingMerge = null;
 
@@ -2930,16 +2875,12 @@
         window.addEventListener('beforeinstallprompt', e => {
             e.preventDefault();
             deferredPWA = e;
-            setTimeout(() => { if (!window.matchMedia('(display-mode:standalone)').matches) document.getElementById(
-                    'installBar').classList.add('show'); }, 3500);
+            setTimeout(() => { if (!window.matchMedia('(display-mode:standalone)').matches) document.getElementById('installBar').classList.add('show'); }, 3500);
         });
 
         function doInstall() {
-            if (deferredPWA) { deferredPWA.prompt();
-                deferredPWA.userChoice.then(() => { deferredPWA = null;
-                    closeInstall(); });
-                hapticMedium(); } else { toast('iPhone: Share ← Add to Home Screen', 'ok');
-                closeInstall(); }
+            if (deferredPWA) { deferredPWA.prompt(); deferredPWA.userChoice.then(() => { deferredPWA = null; closeInstall(); }); hapticMedium(); }
+            else { toast('iPhone: Share ← Add to Home Screen', 'ok'); closeInstall(); }
         }
 
         function closeInstall() { document.getElementById('installBar').classList.remove('show'); }
@@ -2956,8 +2897,7 @@
           `;
                 const blob = new Blob([swCode], { type: 'application/javascript' });
                 const swUrl = URL.createObjectURL(blob);
-                navigator.serviceWorker.register(swUrl).then(reg => console.log('SW registered')).catch(err =>
-                    console.log('SW failed:', err));
+                navigator.serviceWorker.register(swUrl).then(reg => console.log('SW registered')).catch(err => console.log('SW failed:', err));
             });
         }
 
@@ -2979,7 +2919,6 @@
 
         /* ═══════════════════════ INIT ═══════════════════════ */
         window.addEventListener('load', () => {
-            // الوضع التلقائي من النظام
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 document.body.classList.remove('light');
                 document.getElementById('modeBtn').innerHTML = '<i class="fa-solid fa-sun"></i>';
@@ -3021,14 +2960,12 @@
 
         function updateAllTranslations() {
             document.querySelectorAll('[data-lang]').forEach(el => { el.textContent = t(el.getAttribute('data-lang')); });
-            document.querySelectorAll('[data-lang-placeholder]').forEach(el => { el.placeholder = t(el.getAttribute(
-                    'data-lang-placeholder')); });
+            document.querySelectorAll('[data-lang-placeholder]').forEach(el => { el.placeholder = t(el.getAttribute('data-lang-placeholder')); });
         }
 
         function loadSaved() {
             const c = localStorage.getItem('shrimpy_cart');
-            if (c) { cart = JSON.parse(c);
-                updateCart(); }
+            if (c) { cart = JSON.parse(c); updateCart(); }
             const f = localStorage.getItem('shrimpy_favs');
             if (f) { favs = new Set(JSON.parse(f)); }
             const oh = localStorage.getItem('shrimpy_orders');
@@ -3036,7 +2973,6 @@
         }
 
         function saveFavs() { localStorage.setItem('shrimpy_favs', JSON.stringify([...favs])); }
-
         function saveOrders() { localStorage.setItem('shrimpy_orders', JSON.stringify(ordersHistory)); }
 
         /* ═══════════════════════ RECURRING ORDERS ═══════════════════════ */
@@ -3052,8 +2988,7 @@
             sorted.forEach(([id]) => {
                 const item = findItem(id);
                 if (!item) return;
-                list.innerHTML +=
-                    `<div class="rec-chip" onclick="quickAdd('${item.id}',event)"><i class="fa-solid fa-rotate"></i>${getItemName(item)}</div>`;
+                list.innerHTML += `<div class="rec-chip" onclick="quickAdd('${item.id}',event)"><i class="fa-solid fa-rotate"></i>${getItemName(item)}</div>`;
             });
             wrap.style.display = 'block';
             document.querySelector('#recurringWrap .slabel').textContent = t('recurring_label');
@@ -3063,8 +2998,7 @@
         function openOrders() {
             const list = document.getElementById('ordersList');
             if (ordersHistory.length === 0) {
-                list.innerHTML =
-                    `<div class="fav-empty"><i class="fa-solid fa-clock-rotate-left"></i><h3>${t('empty_orders')}</h3><p>${t('empty_orders_sub')}</p></div>`;
+                list.innerHTML = `<div class="fav-empty"><i class="fa-solid fa-clock-rotate-left"></i><h3>${t('empty_orders')}</h3><p>${t('empty_orders_sub')}</p></div>`;
             } else {
                 list.innerHTML = '';
                 ordersHistory.slice().reverse().forEach((order, idx) => {
@@ -3128,16 +3062,14 @@
         function toggleMode() {
             document.body.classList.toggle('light');
             const btn = document.getElementById('modeBtn');
-            btn.innerHTML = document.body.classList.contains('light') ? '<i class="fa-solid fa-moon"></i>' :
-                '<i class="fa-solid fa-sun"></i>';
+            btn.innerHTML = document.body.classList.contains('light') ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
             hapticLight();
         }
 
         /* ═══════════════════════ SKELETONS ═══════════════════════ */
         function renderSkels() {
             let h = '';
-            for (let i = 0; i < 5; i++) h +=
-                `<div class="skel-card"><div class="skel" style="width:95px;height:95px;border-radius:var(--r16);flex-shrink:0"></div><div style="flex-grow:1;padding-right:12px"><div class="skel" style="height:15px;width:60%;margin-bottom:10px"></div><div class="skel" style="height:13px;width:35%"></div></div></div>`;
+            for (let i = 0; i < 5; i++) h += `<div class="skel-card"><div class="skel" style="width:95px;height:95px;border-radius:var(--r16);flex-shrink:0"></div><div style="flex-grow:1;padding-right:12px"><div class="skel" style="height:15px;width:60%;margin-bottom:10px"></div><div class="skel" style="height:13px;width:35%"></div></div></div>`;
             document.getElementById('skelWrap').innerHTML = h;
         }
 
@@ -3149,9 +3081,7 @@
             MENU.forEach(cat => cat.items.forEach(item => {
                 if (item.isBest) {
                     has = true;
-                    const imgHtml = item.img ?
-                        `<div class="bs-img-wrap"><img src="${item.img}" alt="${getItemName(item)}" loading="lazy"></div>` :
-                        '';
+                    const imgHtml = item.img ? `<div class="bs-img-wrap"><img src="${item.img}" alt="${getItemName(item)}" loading="lazy"></div>` : '';
                     list.innerHTML += `<div class="bscard reveal" onclick="openModal('${item.id}')">
               ${imgHtml}
               <div class="bs-badge">${currentLang === 'en' ? 'BESTSELLER' : 'الأكثر طلباً'}</div>
@@ -3173,8 +3103,7 @@
             wrap.innerHTML = '';
             MENU.forEach((cat, idx) => {
                 const catTitle = currentLang === 'en' && cat.titleEn ? cat.titleEn : cat.title;
-                nav.innerHTML +=
-                    `<button class="ntab${idx===0?' active':''}" onclick="goToCat('${cat.id}',this)"><i class="fa-solid ${cat.icon}"></i>${catTitle}</button>`;
+                nav.innerHTML += `<button class="ntab${idx===0?' active':''}" onclick="goToCat('${cat.id}',this)"><i class="fa-solid ${cat.icon}"></i>${catTitle}</button>`;
                 const catNote = currentLang === 'en' && cat.noteEn ? cat.noteEn : cat.note;
                 let h = `<section id="${cat.id}" class="cat-sec" data-cat="${catTitle.toLowerCase()}">
             <div class="cat-head reveal"><div class="cat-ico"><i class="fa-solid ${cat.icon}"></i></div><div class="cat-title">${catTitle}</div></div>
@@ -3185,11 +3114,9 @@
                     const isSide = item.isSide;
                     let imgH;
                     if (isSide) {
-                        imgH =
-                            `<div class="pimg-ph"><i class="fa-solid fa-utensils"></i></div>`;
+                        imgH = `<div class="pimg-ph"><i class="fa-solid fa-utensils"></i></div>`;
                     } else if (item.img) {
-                        imgH =
-                            `<div class="pimg-wrap"><img src="${item.img}" alt="${getItemName(item)}" loading="lazy"></div>`;
+                        imgH = `<div class="pimg-wrap"><img src="${item.img}" alt="${getItemName(item)}" loading="lazy"></div>`;
                     } else {
                         imgH = `<div class="pimg-ph"><i class="fa-solid fa-shrimp"></i></div>`;
                     }
@@ -3242,34 +3169,26 @@
         /* ═══════════════════════ AREAS ═══════════════════════ */
         function renderAreas() {
             const list = document.getElementById('areaList');
-            list.innerHTML = AREAS.sort((a, b) => a.localeCompare(b, 'ar')).map(a =>
-                `<div class="aitem" onclick="pickArea('${a}')">${a}</div>`).join('');
+            list.innerHTML = AREAS.sort((a, b) => a.localeCompare(b, 'ar')).map(a => `<div class="aitem" onclick="pickArea('${a}')">${a}</div>`).join('');
         }
 
         function filterAreas() {
             const t = document.getElementById('areaInp').value.trim().toLowerCase();
             let any = false;
-            document.querySelectorAll('.aitem').forEach(el => { const s = el.textContent.toLowerCase().includes(t);
-                el.style.display = s ? 'block' : 'none'; if (s) any = true; });
+            document.querySelectorAll('.aitem').forEach(el => { const s = el.textContent.toLowerCase().includes(t); el.style.display = s ? 'block' : 'none'; if (s) any = true; });
             document.getElementById('areaList').style.display = any ? 'block' : 'none';
         }
 
-        function showAreas() { document.getElementById('areaList').style.display = 'block';
-            filterAreas(); }
-
-        function pickArea(a) { document.getElementById('areaInp').value = a;
-            document.getElementById('areaList').style.display = 'none'; }
-        document.addEventListener('click', e => { if (!e.target.closest('#addrGrp')) { const l = document.getElementById(
-                    'areaList'); if (l) l.style.display = 'none'; } });
+        function showAreas() { document.getElementById('areaList').style.display = 'block'; filterAreas(); }
+        function pickArea(a) { document.getElementById('areaInp').value = a; document.getElementById('areaList').style.display = 'none'; }
+        document.addEventListener('click', e => { if (!e.target.closest('#addrGrp')) { const l = document.getElementById('areaList'); if (l) l.style.display = 'none'; } });
 
         /* ═══════════════════════ SEARCH ═══════════════════════ */
         function filterMenu() {
             const t = document.getElementById('searchInput').value.toLowerCase();
             let found = false;
-            document.getElementById('bsWrap').style.display = t ? 'none' : (document.getElementById('bsList').children
-                .length > 0 ? 'block' : 'none');
-            document.getElementById('recurringWrap').style.display = t ? 'none' : (ordersHistory.length > 0 ? 'block' :
-                'none');
+            document.getElementById('bsWrap').style.display = t ? 'none' : (document.getElementById('bsList').children.length > 0 ? 'block' : 'none');
+            document.getElementById('recurringWrap').style.display = t ? 'none' : (ordersHistory.length > 0 ? 'block' : 'none');
             document.querySelectorAll('.cat-sec').forEach(sec => {
                 let has = false;
                 const cn = sec.getAttribute('data-cat');
@@ -3278,8 +3197,7 @@
                     const name = pcard ? pcard.getAttribute('data-name') : '';
                     const ok = name.includes(t) || cn.includes(t);
                     c.style.display = ok ? 'block' : 'none';
-                    if (ok) { has = true;
-                        found = true; }
+                    if (ok) { has = true; found = true; }
                 });
                 sec.style.display = has ? 'block' : 'none';
             });
@@ -3289,8 +3207,7 @@
                     em = document.createElement('div');
                     em.id = 'emptyMsg';
                     em.style.cssText = 'text-align:center;padding:45px 18px;color:var(--w50)';
-                    em.innerHTML =
-                        `<i class="fa-solid fa-magnifying-glass" style="font-size:2.4rem;margin-bottom:12px;opacity:.35;display:block"></i><h3 style="font-weight:800;color:var(--w95)">${t('no_results')}</h3><p style="margin-top:4px">${t('no_results_sub')}</p>`;
+                    em.innerHTML = `<i class="fa-solid fa-magnifying-glass" style="font-size:2.4rem;margin-bottom:12px;opacity:.35;display:block"></i><h3 style="font-weight:800;color:var(--w95)">${t('no_results')}</h3><p style="margin-top:4px">${t('no_results_sub')}</p>`;
                     document.getElementById('menuWrap').prepend(em);
                 } else em.style.display = 'block';
             } else if (em) em.style.display = 'none';
@@ -3302,10 +3219,8 @@
             if (!SR) return toast('Browser does not support voice search', 'err');
             const r = new SR();
             r.lang = currentLang === 'ar' ? 'ar-EG' : 'en-US';
-            r.onstart = () => { document.getElementById('micBtn').classList.add('on');
-                hapticMedium(); };
-            r.onresult = e => { document.getElementById('searchInput').value = e.results[0][0].transcript;
-                filterMenu(); };
+            r.onstart = () => { document.getElementById('micBtn').classList.add('on'); hapticMedium(); };
+            r.onresult = e => { document.getElementById('searchInput').value = e.results[0][0].transcript; filterMenu(); };
             r.onerror = () => toast(currentLang === 'en' ? 'Could not hear you clearly' : 'لم يتم سماعك بوضوح', 'err');
             r.onend = () => document.getElementById('micBtn').classList.remove('on');
             r.start();
@@ -3394,10 +3309,8 @@
         function resetSwipeBackground(container) {
             const bgLeft = container.querySelector('.swipe-bg-left');
             const bgRight = container.querySelector('.swipe-bg-right');
-            if (bgLeft) { bgLeft.style.opacity = '0';
-                bgLeft.style.transform = 'scale(0.8)'; }
-            if (bgRight) { bgRight.style.opacity = '0';
-                bgRight.style.transform = 'scale(0.8)'; }
+            if (bgLeft) { bgLeft.style.opacity = '0'; bgLeft.style.transform = 'scale(0.8)'; }
+            if (bgRight) { bgRight.style.opacity = '0'; bgRight.style.transform = 'scale(0.8)'; }
         }
 
         function resetSwipeState() {
@@ -3406,8 +3319,7 @@
                 swipeState.element.style.transform = '';
                 resetSwipeBackground(swipeState.container);
             }
-            swipeState = { startX: 0, startY: 0, currentX: 0, isSwiping: false, direction: null, element: null,
-                container: null };
+            swipeState = { startX: 0, startY: 0, currentX: 0, isSwiping: false, direction: null, element: null, container: null };
         }
 
         function handleSwipeFav(itemId) {
@@ -3501,8 +3413,7 @@
             const addAll = document.getElementById('favAddAll');
             list.innerHTML = '';
             if (favs.size === 0) {
-                list.innerHTML =
-                    `<div class="fav-empty"><i class="fa-regular fa-heart"></i><h3>${t('empty_favs')}</h3><p>${t('empty_favs_sub')}</p></div>`;
+                list.innerHTML = `<div class="fav-empty"><i class="fa-regular fa-heart"></i><h3>${t('empty_favs')}</h3><p>${t('empty_favs_sub')}</p></div>`;
                 addAll.style.display = 'none';
             } else {
                 favs.forEach(fid => {
@@ -3512,16 +3423,13 @@
                     const isSide = item.isSide;
                     let imgH;
                     if (isSide) {
-                        imgH =
-                            `<div class="pimg-ph"><i class="fa-solid fa-utensils"></i></div>`;
+                        imgH = `<div class="pimg-ph"><i class="fa-solid fa-utensils"></i></div>`;
                     } else if (item.img) {
-                        imgH =
-                            `<div class="pimg-wrap"><img src="${item.img}" alt="${getItemName(item)}" loading="lazy"></div>`;
+                        imgH = `<div class="pimg-wrap"><img src="${item.img}" alt="${getItemName(item)}" loading="lazy"></div>`;
                     } else {
                         imgH = `<div class="pimg-ph"><i class="fa-solid fa-shrimp"></i></div>`;
                     }
-                    list.innerHTML +=
-                        `<div class="pcard" style="margin-bottom:12px;border-radius:var(--r24);box-shadow:var(--card-shadow)">
+                    list.innerHTML += `<div class="pcard" style="margin-bottom:12px;border-radius:var(--r24);box-shadow:var(--card-shadow)">
                 <div onclick="openModal('${item.id}');closeAll()" style="display:flex;gap:13px;align-items:center;flex-grow:1;cursor:pointer">
                   ${imgH}
                   <div class="pinfo"><h3 class="pname">${getItemName(item)}</h3>
@@ -3581,42 +3489,22 @@
               </div>
             </div>`;
             document.body.appendChild(overlay);
-
             document.getElementById('mpMerge').onclick = () => {
                 existingItems[0].qty += qty;
                 if (notes && !existingItems[0].notes) existingItems[0].notes = notes;
-                saveCart();
-                updateCart();
-                shakeCartBadge();
-                toast(t('cart_merged'), 'ok');
-                hapticCartAdd();
-                closeMergePrompt();
+                saveCart(); updateCart(); shakeCartBadge();
+                toast(t('cart_merged'), 'ok'); hapticCartAdd(); closeMergePrompt();
             };
             document.getElementById('mpSeparate').onclick = () => {
                 cart.push({
                     uid: item.id + Date.now() + Math.random().toString(36).substr(2, 5),
-                    id: item.id,
-                    name: item.name,
-                    nameEn: item.nameEn,
-                    price: item.price,
-                    qty: qty,
-                    notes: notes
+                    id: item.id, name: item.name, nameEn: item.nameEn, price: item.price, qty: qty, notes: notes
                 });
-                saveCart();
-                updateCart();
-                shakeCartBadge();
-                toast(t('cart_added'), 'ok');
-                hapticCartAdd();
-                closeMergePrompt();
+                saveCart(); updateCart(); shakeCartBadge();
+                toast(t('cart_added'), 'ok'); hapticCartAdd(); closeMergePrompt();
             };
-            document.getElementById('mpCancel').onclick = () => {
-                closeMergePrompt();
-                hapticLight();
-            };
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) { closeMergePrompt();
-                    hapticLight(); }
-            });
+            document.getElementById('mpCancel').onclick = () => { closeMergePrompt(); hapticLight(); };
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) { closeMergePrompt(); hapticLight(); } });
             hapticMedium();
         }
 
@@ -3636,8 +3524,7 @@
             document.getElementById('mQty').textContent = '1';
             document.getElementById('mPriceBtn').textContent = priceStr(item.price);
             const img = document.getElementById('mImg');
-            if (item.img && !item.isSide) { img.src = item.img;
-                img.style.display = 'block'; } else img.style.display = 'none';
+            if (item.img && !item.isSide) { img.src = item.img; img.style.display = 'block'; } else img.style.display = 'none';
             document.getElementById('mNotes').placeholder = t('notes_placeholder');
             document.querySelector('#prodSheet .sugtitle').textContent = t('sug_title');
             document.querySelector('#prodSheet .btn-primary span:first-child').textContent = t('add_to_cart');
@@ -3645,8 +3532,7 @@
         }
 
         function quickAdd(id, e) {
-            e.stopPropagation();
-            e.preventDefault();
+            e.stopPropagation(); e.preventDefault();
             const item = findItem(id);
             if (!item) return;
             const result = smartAddToCart(item, 1, '');
@@ -3655,11 +3541,7 @@
                 showMergePrompt(item, 1, '', existing);
                 return;
             }
-            saveCart();
-            updateCart();
-            hapticCartAdd();
-            shakeCartBadge();
-            wiggleCard(id);
+            saveCart(); updateCart(); hapticCartAdd(); shakeCartBadge(); wiggleCard(id);
             const msg = result === 'merged' ? t('cart_merged') : t('add_cart') + ' ' + getItemName(item) + ' 🦐';
             toast(msg, 'ok');
             const target = e.currentTarget || e.target;
@@ -3668,10 +3550,7 @@
             const cy = rect.top + rect.height / 2;
             const container = target.closest('.swipe-container') || target.closest('.pcard');
             let imgSrc = null;
-            if (container) {
-                const img = container.querySelector('.pimg');
-                if (img && img.src) imgSrc = img.src;
-            }
+            if (container) { const img = container.querySelector('.pimg'); if (img && img.src) imgSrc = img.src; }
             if (!imgSrc && item.img && !item.isSide) imgSrc = item.img;
             createFly(imgSrc, cx, cy);
         }
@@ -3687,8 +3566,7 @@
         }
 
         function addSug(id, name, price, e) {
-            e.stopPropagation();
-            e.preventDefault();
+            e.stopPropagation(); e.preventDefault();
             const item = { id, name, nameEn: name, price, isSide: true };
             const result = smartAddToCart(item, 1, '');
             if (result === 'prompt') {
@@ -3696,10 +3574,7 @@
                 showMergePrompt(item, 1, '', existing);
                 return;
             }
-            saveCart();
-            updateCart();
-            shakeCartBadge();
-            hapticCartAdd();
+            saveCart(); updateCart(); shakeCartBadge(); hapticCartAdd();
             toast(t('add_cart') + ' ' + name, 'ok');
         }
 
@@ -3713,11 +3588,7 @@
                 closeAll();
                 return;
             }
-            saveCart();
-            updateCart();
-            closeAll();
-            hapticCartAdd();
-            shakeCartBadge();
+            saveCart(); updateCart(); closeAll(); hapticCartAdd(); shakeCartBadge();
             const msg = result === 'merged' ? t('cart_merged') : t('cart_added');
             toast(msg, 'ok');
             const imgEl = document.getElementById('mImg');
@@ -3789,10 +3660,8 @@
             const fc = document.getElementById('fcart');
             if (cart.length > 0) {
                 fc.classList.add('on');
-                let items = 0,
-                    total = 0;
-                cart.forEach(i => { items += i.qty;
-                    total += i.price * i.qty; });
+                let items = 0, total = 0;
+                cart.forEach(i => { items += i.qty; total += i.price * i.qty; });
                 document.getElementById('cCount').textContent = items;
                 document.getElementById('cTotal').textContent = priceStr(total);
             } else {
@@ -3804,9 +3673,7 @@
         function copyOrder() {
             let sub = 0;
             let txt = '🦐 Shrimpy Order:\n\n';
-            cart.forEach(i => { sub += i.price * i.qty;
-                txt +=
-                `▪️ ${i.qty}x ${getItemName({ name: i.name, nameEn: i.nameEn })} (${priceStr(i.price * i.qty)})\n${i.notes ? '  ✏️ ' + i.notes + '\n' : ''}`; });
+            cart.forEach(i => { sub += i.price * i.qty; txt += `▪️ ${i.qty}x ${getItemName({ name: i.name, nameEn: i.nameEn })} (${priceStr(i.price * i.qty)})\n${i.notes ? '  ✏️ ' + i.notes + '\n' : ''}`; });
             txt += `\nTotal: ${priceStr(sub - discount)}`;
             navigator.clipboard.writeText(txt).then(() => {
                 toast(currentLang === 'en' ? '📋 Order copied!' : '📋 تم نسخ الطلب!', 'ok');
@@ -3817,15 +3684,12 @@
         function openCart() {
             const list = document.getElementById('cartList');
             list.innerHTML = '';
-            let items = 0,
-                sub = 0;
+            let items = 0, sub = 0;
             if (cart.length === 0) {
-                list.innerHTML =
-                    `<div style="text-align:center;padding:40px;color:var(--w50)"><i class="fa-solid fa-basket-shopping" style="font-size:2.5rem;opacity:.3;margin-bottom:12px;display:block"></i><h3 style="font-weight:800;color:var(--w95)">${t('empty_cart')}</h3></div>`;
+                list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--w50)"><i class="fa-solid fa-basket-shopping" style="font-size:2.5rem;opacity:.3;margin-bottom:12px;display:block"></i><h3 style="font-weight:800;color:var(--w95)">${t('empty_cart')}</h3></div>`;
             } else {
                 cart.forEach((item, idx) => {
-                    items += item.qty;
-                    sub += item.price * item.qty;
+                    items += item.qty; sub += item.price * item.qty;
                     const displayName = getItemName({ name: item.name, nameEn: item.nameEn });
                     list.innerHTML += `<div class="ci">
                 <div style="flex-grow:1;padding-left:12px">
@@ -3843,9 +3707,8 @@
             }
             document.getElementById('sumCnt').textContent = items;
             document.getElementById('sumSub').textContent = priceStr(sub);
-            if (discount > 0) { document.getElementById('discRow').style.display = 'flex';
-                document.getElementById('sumDisc').textContent = priceStr(discount); } else document.getElementById(
-                'discRow').style.display = 'none';
+            if (discount > 0) { document.getElementById('discRow').style.display = 'flex'; document.getElementById('sumDisc').textContent = priceStr(discount); }
+            else document.getElementById('discRow').style.display = 'none';
             document.getElementById('sumTot').textContent = priceStr(Math.max(0, sub - discount));
             document.getElementById('couponInp').placeholder = currentLang === 'en' ? 'Coupon Code' : 'كود الخصم';
             document.querySelector('#cartSheet .btn-primary').textContent = t('checkout_btn');
@@ -3860,27 +3723,21 @@
         }
 
         function cartQty(idx, d) {
-            if (cart[idx].qty + d > 0) { cart[idx].qty += d;
-                hapticLight(); } else { cart.splice(idx, 1);
-                hapticMedium(); }
-            saveCart();
-            updateCart();
-            if (cart.length === 0) closeAll();
-            else openCart();
+            if (cart[idx].qty + d > 0) { cart[idx].qty += d; hapticLight(); }
+            else { cart.splice(idx, 1); hapticMedium(); }
+            saveCart(); updateCart();
+            if (cart.length === 0) closeAll(); else openCart();
         }
 
         function applyCoupon() {
             const code = document.getElementById('couponInp').value.trim().toUpperCase();
             if (code === 'SHRIMPY20') {
                 if (localStorage.getItem('coupon_used_shrimpy20') === 'true') return toast(t('coupon_used'), 'err');
-                discount = 20;
-                localStorage.setItem('coupon_used_shrimpy20', 'true');
-                toast(t('coupon_ok') + ' ' + priceStr(20) + ' ✅', 'ok');
-                hapticSuccess();
+                discount = 20; localStorage.setItem('coupon_used_shrimpy20', 'true');
+                toast(t('coupon_ok') + ' ' + priceStr(20) + ' ✅', 'ok'); hapticSuccess();
             } else if (code === 'LOYALTY10') {
                 discount = Math.floor(cart.reduce((s, i) => s + i.price * i.qty, 0) * 0.1);
-                toast(t('coupon_ok') + ' 10% ✅', 'ok');
-                hapticSuccess();
+                toast(t('coupon_ok') + ' 10% ✅', 'ok'); hapticSuccess();
             } else {
                 return toast(t('coupon_invalid'), 'err');
             }
@@ -3888,9 +3745,6 @@
         }
 
         function openCheckout() {
-            const sub = cart.reduce((s, i) => s + i.price * i.qty, 0);
-            // تم إلغاء الحد الأدنى
-            // if (sub < 100) return toast(t('min_order'), 'err');
             closeAll();
             document.querySelector('#checkSheet .modal-title').textContent = t('checkout_title');
             document.querySelector('#checkSheet label[for="typeD"] span').textContent = t('delivery');
@@ -3901,7 +3755,6 @@
             document.getElementById('cAddr').placeholder = t('c_addr_ph');
             document.querySelector('#addrGrp .dnote span').textContent = t('delivery_note');
             document.querySelector('#checkSheet .btn-primary span').textContent = t('send_wa');
-            // تحديث تسميات الحقول باستخدام المحددات الصحيحة
             const labels = document.querySelectorAll('#checkSheet .fgroup > label[data-lang]');
             if (labels.length >= 2) {
                 labels[0].textContent = t('c_name');
@@ -3922,47 +3775,33 @@
             const addr = document.getElementById('cAddr').value.trim();
             if (!name || !phone) return toast(t('fill_name_phone'), 'err');
             if (!/^01[0125][0-9]{8}$/.test(phone)) return toast(t('invalid_phone'), 'err');
-            if (isDel) { if (!area) return toast(t('fill_area'), 'err'); if (!addr) return toast(t('fill_addr'),
-                'err'); }
+            if (isDel) { if (!area) return toast(t('fill_area'), 'err'); if (!addr) return toast(t('fill_addr'), 'err'); }
             let sub = 0;
-            let txt =
-                `مرحباً Shrimpy ⚓\n\n*بيانات العميل:*\n👤 ${name}\n📞 ${phone}\nنوع الطلب: ${isDel ? '🚚 دليفري' : '🏪 استلام من الفرع'}\n`;
+            let txt = `مرحباً Shrimpy ⚓\n\n*بيانات العميل:*\n👤 ${name}\n📞 ${phone}\nنوع الطلب: ${isDel ? '🚚 دليفري' : '🏪 استلام من الفرع'}\n`;
             if (isDel) txt += `📍 ${area}\n🏠 ${addr}\n`;
             txt += `\n*الطلبات:*\n`;
-            cart.forEach(i => { sub += i.price * i.qty;
-                txt +=
-                `▪️ ${i.qty}x ${i.name} (${i.price * i.qty} EGP)\n${i.notes ? `  ✏️ ${i.notes}\n` : ''}`; });
+            cart.forEach(i => { sub += i.price * i.qty; txt += `▪️ ${i.qty}x ${i.name} (${i.price * i.qty} EGP)\n${i.notes ? `  ✏️ ${i.notes}\n` : ''}`; });
             txt += `\nالمجموع: ${sub} EGP\n`;
             if (discount > 0) txt += `الخصم: ${discount} EGP\n`;
             txt += `*المطلوب: ${sub - discount} EGP*\n`;
             if (isDel) txt += `\n⚠️ (مصاريف التوصيل غير مضافة)`;
 
             ordersHistory.push({
-                date: new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric',
-                    hour: '2-digit', minute: '2-digit' }),
-                items: cart.map(i => ({ id: i.id, name: i.name, nameEn: i.nameEn, qty: i.qty, price: i.price,
-                    notes: i.notes })),
+                date: new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                items: cart.map(i => ({ id: i.id, name: i.name, nameEn: i.nameEn, qty: i.qty, price: i.price, notes: i.notes })),
                 total: sub - discount,
                 type: isDel ? 'دليفري' : 'استلام'
             });
             saveOrders();
             hapticSuccess();
             launchConfetti();
-
             window.open(`https://wa.me/201101012543?text=${encodeURIComponent(txt)}`, '_blank');
-            cart = [];
-            discount = 0;
-            saveCart();
-            updateCart();
-            closeAll();
-            renderRecurring();
-            if (!isDel) setTimeout(() => { document.getElementById('overlay').classList.add('on');
-                document.getElementById('brpop').classList.add('on'); }, 900);
+            cart = []; discount = 0; saveCart(); updateCart(); closeAll(); renderRecurring();
+            if (!isDel) setTimeout(() => { document.getElementById('overlay').classList.add('on'); document.getElementById('brpop').classList.add('on'); }, 900);
             toast(t('order_sent'), 'ok');
         }
 
-        function closeBranch() { document.getElementById('brpop').classList.remove('on');
-            document.getElementById('overlay').classList.remove('on'); }
+        function closeBranch() { document.getElementById('brpop').classList.remove('on'); document.getElementById('overlay').classList.remove('on'); }
 
         function showSheet(id) {
             document.getElementById('overlay').classList.add('on');
@@ -3994,8 +3833,7 @@
         window.addEventListener('scroll', () => {
             let cur = '';
             const nh = document.getElementById('snav').offsetHeight;
-            document.querySelectorAll('.cat-sec').forEach(sec => { if (window.scrollY >= sec.offsetTop - nh -
-                    30) cur = sec.id; });
+            document.querySelectorAll('.cat-sec').forEach(sec => { if (window.scrollY >= sec.offsetTop - nh - 30) cur = sec.id; });
             document.querySelectorAll('.ntab').forEach(btn => {
                 btn.classList.remove('active');
                 if (cur && btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(cur)) {
@@ -4013,9 +3851,7 @@
                         if (perm === 'granted') {
                             setTimeout(() => {
                                 new Notification('Shrimpy 🦐', {
-                                    body: currentLang === 'en' ?
-                                        'Craving something delicious? Order now!' :
-                                        'شهي اليوم؟ اطلب وجبتك المفضلة الآن!',
+                                    body: currentLang === 'en' ? 'Craving something delicious? Order now!' : 'شهي اليوم؟ اطلب وجبتك المفضلة الآن!',
                                     icon: 'https://raw.githubusercontent.com/Shrimpyrestaurant/shrimpy-restaurant-menu/refs/heads/main/FB_IMG_1780348844982.jpg',
                                     vibrate: [200, 100, 200]
                                 });
@@ -4067,16 +3903,76 @@
         function toast(msg, type) {
             const tEl = document.createElement('div');
             tEl.className = `toast ${type}`;
-            tEl.innerHTML = type === 'ok' ? `<i class="fa-solid fa-check-circle"></i><span>${msg}</span>` :
-                `<i class="fa-solid fa-circle-exclamation"></i><span>${msg}</span>`;
+            tEl.innerHTML = type === 'ok' ? `<i class="fa-solid fa-check-circle"></i><span>${msg}</span>` : `<i class="fa-solid fa-circle-exclamation"></i><span>${msg}</span>`;
             document.getElementById('toasts').appendChild(tEl);
-            if (type === 'err') hapticError();
-            else hapticLight();
-            setTimeout(() => { tEl.style.opacity = '0';
-                tEl.style.transform = 'translateY(14px)';
-                tEl.style.transition = '.4s';
-                setTimeout(() => tEl.remove(), 400); }, 2500);
+            if (type === 'err') hapticError(); else hapticLight();
+            setTimeout(() => { tEl.style.opacity = '0'; tEl.style.transform = 'translateY(14px)'; tEl.style.transition = '.4s'; setTimeout(() => tEl.remove(), 400); }, 2500);
         }
+
+        /* ═══════════════════════ PERFORMANCE MANAGER ═══════════════════════ */
+        (function() {
+            const isLowEnd = (navigator.hardwareConcurrency < 6);
+            if (isLowEnd) document.body.classList.add('reduce-motion');
+
+            let lastFPSTime = performance.now();
+            let frameCount = 0;
+            let lowFPSMode = false;
+
+            function startFPSMonitor() {
+                function countFrame() {
+                    if (!document.hidden) {
+                        frameCount++;
+                        const now = performance.now();
+                        if (now - lastFPSTime > 500) {
+                            const fps = (frameCount / ((now - lastFPSTime) / 1000));
+                            if (fps < 45 && !lowFPSMode) {
+                                lowFPSMode = true;
+                                document.body.classList.add('reduce-motion');
+                            } else if (fps > 55 && lowFPSMode) {
+                                lowFPSMode = false;
+                                document.body.classList.remove('reduce-motion');
+                            }
+                            frameCount = 0;
+                            lastFPSTime = now;
+                        }
+                    }
+                    requestAnimationFrame(countFrame);
+                }
+                requestAnimationFrame(countFrame);
+            }
+            startFPSMonitor();
+
+            const styleSheet = document.createElement("style");
+            styleSheet.textContent = `
+                .reduce-motion .splash-ring::before,
+                .reduce-motion .hero-bg,
+                .reduce-motion .hero-icon-btn.music-active,
+                .reduce-motion .bscard,
+                .reduce-motion .pcard.bs,
+                .reduce-motion .cat-ico,
+                .reduce-motion .add-btn,
+                .reduce-motion .fcart,
+                .reduce-motion .socials a,
+                .reduce-motion .dynamic-separator .sep-line,
+                .reduce-motion .mic-btn-inner,
+                .reduce-motion .mic-btn-inner.on {
+                    animation: none !important;
+                    box-shadow: none !important;
+                }
+                .reduce-motion .bscard { box-shadow: 0 4px 24px rgba(0,0,0,0.5) !important; }
+                .reduce-motion .pcard.bs { box-shadow: 0 4px 20px rgba(0,0,0,0.45) !important; }
+                .reduce-motion .fcart { box-shadow: 0 10px 40px rgba(0,0,0,.8) !important; }
+                .reduce-motion .add-btn { box-shadow: 0 4px 14px rgba(255,90,0,.4) !important; }
+                .reduce-motion .hero-bg { animation: none !important; }
+                .reduce-motion .swipe-bg-right i, 
+                .reduce-motion .swipe-bg-left i,
+                .reduce-motion .ntab i,
+                .reduce-motion .pimg-ph i {
+                    animation: none !important;
+                }
+            `;
+            document.head.appendChild(styleSheet);
+        })();
     </script>
 </body>
 </html>
