@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shrimpy Dashboard | لوحة التحكم</title>
+  
+  <!-- استدعاء خطوط شرمبي المميزة -->
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- استدعاء Firebase (النسخة الخفيفة للويب) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <style>
+    :root {
+      --bg: #030303;
+      --card: #1A1A1A;
+      --coral: #FF5A00;
+      --gold: #C9A96E;
+      --text: #ffffff;
+      --text-muted: #9CA3AF;
+    }
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      background-color: var(--card);
+      padding: 20px;
+      text-align: center;
+      border-bottom: 2px solid var(--coral);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 5px;
+      color: var(--text);
+      margin: 0;
+      font-size: 2.5rem;
+    }
+    .header p {
+      color: var(--gold);
+      margin: 5px 0 0 0;
+      font-weight: bold;
+    }
+    .container {
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .order-card {
+      background-color: var(--card);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-right: 4px solid var(--coral);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+    .customer-name {
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: var(--gold);
+    }
+    .order-time {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .order-items {
+      margin-bottom: 15px;
+    }
+    .item-line {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      font-size: 1rem;
+    }
+    .total-price {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: var(--coral);
+      text-align: left;
+      margin-top: 10px;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-family: 'Tajawal', sans-serif;
+      font-size: 1rem;
+      cursor: pointer;
+      color: #fff;
+    }
+    .btn-prepare { background-color: #F59E0B; }
+    .btn-deliver { background-color: #10B981; }
+    .btn-delete { background-color: #EF4444; }
+    
+    /* شارة الحالة */
+    .status-badge {
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+    .status-new { background-color: rgba(255, 90, 0, 0.2); color: var(--coral); }
+    .status-preparing { background-color: rgba(245, 158, 11, 0.2); color: #F59E0B; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1 dir="ltr">SHRIMPY</h1>
+    <p>لوحة تحكم الطلبات (لايف)</p>
+  </div>
+
+  <div class="container" id="ordersContainer">
+    <div style="text-align: center; color: var(--text-muted); margin-top: 50px;">
+      <i class="fa-solid fa-spinner fa-spin fa-3x" style="color: var(--coral)"></i>
+      <p style="margin-top: 15px; font-weight: bold;">جاري تحميل الطلبات...</p>
+    </div>
+  </div>
+
+  <script>
+    // 1. ربط الداشبورد بقاعدة بياناتك في Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCOYDK8fbk1GldxbazxNOMh99LaC8dBJ1Q",
+      authDomain: "shrimpy-app.firebaseapp.com",
+      projectId: "shrimpy-app",
+      storageBucket: "shrimpy-app.firebasestorage.app",
+      messagingSenderId: "794836312532",
+      appId: "1:794836312532:web:3b876917d1d099f62ab641"
+    };
+
+    // تهيئة فايربيز
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const ordersContainer = document.getElementById('ordersContainer');
+
+    // 2. سحب الطلبات لايف من قاعدة البيانات
+    // هنستمع لمجموعة اسمها 'orders' (هنعملها في التطبيق الأساسي)
+    db.collection("orders").orderBy("timestamp", "desc").onSnapshot((querySnapshot) => {
+      ordersContainer.innerHTML = ''; // تفريغ الشاشة
+      
+      if (querySnapshot.empty) {
+        ordersContainer.innerHTML = `
+          <div style="text-align: center; color: var(--text-muted); margin-top: 50px;">
+            <i class="fa-solid fa-box-open fa-3x" style="opacity: 0.5;"></i>
+            <p style="margin-top: 15px; font-weight: bold;">لا توجد طلبات حالياً</p>
+          </div>`;
+        return;
+      }
+
+      querySnapshot.forEach((doc) => {
+        const order = doc.data();
+        const orderId = doc.id;
+        
+        // تحويل وقت الطلب لوقت مقروء
+        const orderTime = order.timestamp ? order.timestamp.toDate().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : 'الآن';
+
+        // رسم كارت الطلب
+        const orderCard = document.createElement('div');
+        orderCard.className = 'order-card';
+        
+        let itemsHtml = '';
+        if(order.items && order.items.length > 0) {
+            order.items.forEach(item => {
+                itemsHtml += `
+                <div class="item-line">
+                    <span><span style="color: var(--coral); font-weight: bold;">${item.qty}x</span> ${item.name}</span>
+                    <span>${item.price * item.qty} ج.م</span>
+                </div>`;
+                if(item.notes) {
+                    itemsHtml += `<div style="font-size: 0.8rem; color: #FCA5A5; margin-bottom: 5px;">✏️ ملاحظة: ${item.notes}</div>`;
+                }
+            });
+        }
+
+        orderCard.innerHTML = `
+          <div class="order-header">
+            <div>
+              <div class="customer-name"><i class="fa-solid fa-user"></i> ${order.customerName || 'عميل'}</div>
+              <div style="font-size: 0.9rem; color: #fff; margin-top: 5px;"><i class="fa-solid fa-phone"></i> ${order.phone || 'غير مدرج'}</div>
+              <div style="font-size: 0.9rem; color: #fff; margin-top: 5px;"><i class="fa-solid fa-location-dot"></i> ${order.address || 'استلام من الفرع'}</div>
+            </div>
+            <div style="text-align: left;">
+              <span class="status-badge ${order.status === 'new' ? 'status-new' : 'status-preparing'}">
+                ${order.status === 'new' ? 'جديد' : (order.status === 'preparing' ? 'قيد التجهيز' : 'مكتمل')}
+              </span>
+              <div class="order-time" style="margin-top: 10px;">${orderTime}</div>
+            </div>
+          </div>
+          
+          <div class="order-items">
+            ${itemsHtml}
+          </div>
+          
+          <div class="total-price">الإجمالي: ${order.total || 0} ج.م</div>
+          
+          <div class="actions">
+            ${order.status === 'new' ? `<button class="btn btn-prepare" onclick="updateStatus('${orderId}', 'preparing')"><i class="fa-solid fa-fire-burner"></i> تجهيز</button>` : ''}
+            ${order.status === 'preparing' ? `<button class="btn btn-deliver" onclick="updateStatus('${orderId}', 'delivered')"><i class="fa-solid fa-motorcycle"></i> خرج للتوصيل</button>` : ''}
+            <button class="btn btn-delete" onclick="deleteOrder('${orderId}')"><i class="fa-solid fa-trash"></i> إخفاء</button>
+          </div>
+        `;
+        
+        ordersContainer.appendChild(orderCard);
+      });
+    });
+
+    // 3. دوال التحكم في الطلبات (تحديث الحالة أو المسح)
+    function updateStatus(id, newStatus) {
+      db.collection("orders").doc(id).update({
+        status: newStatus
+      }).then(() => {
+        // مش محتاجين نعمل تحديث للشاشة، لأن onSnapshot بتحدث لايف لوحدها
+      }).catch((error) => {
+        alert("حصل خطأ أثناء تحديث الطلب: " + error);
+      });
+    }
+
+    function deleteOrder(id) {
+      if(confirm("متأكد إنك عايز تحذف الطلب ده من الشاشة؟")) {
+        db.collection("orders").doc(id).delete();
+      }
+    }
+  </script>
+</body>
+</html>
